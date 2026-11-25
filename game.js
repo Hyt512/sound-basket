@@ -252,7 +252,7 @@ function render(){
   const panels=[
     `<div class="pond stone-bank"><div class="stone-row" id="stones"></div><small>点按试听，横拉或竖捏改变形状和音高</small></div><div class="controls"><label for="shape">宽度</label><input id="shape" type="range"><label for="stone-height">高度</label><input id="stone-height" type="range"><label for="tone">音色明暗</label><input id="tone" type="range"><div class="stone-actions"><button class="secondary" id="pick"></button> <button class="secondary" id="listen">▷ 合奏试听</button></div><p class="picked" id="picked"></p></div>`,
     `<div class="river-sheet"><div id="lanes" class="lanes" aria-label="钢琴音阶"></div><div class="river-drawing"><canvas id="river" class="canvas" width="720" height="280" tabindex="0" aria-label="画旋律，可按上下方向键选音，空格添音，回车换行"></canvas><span id="playhead" class="playhead" aria-hidden="true" hidden></span></div></div><div class="controls"><p><strong>从下往上是 1 Do 到 7 Si。</strong> 点击左边的音名可以试听；从左往右决定播放时间。每抬一次笔，就留下一条新线。</p><p>键盘可用 ↑ ↓ 选音、空格添音、Enter 换行。</p><button class="secondary" id="listen">▷ 播放旋律</button> <button class="secondary" id="undo">撤销上一条</button> <button class="secondary" id="clear">清空</button><p id="river-count" class="picked"></p></div>`,
-    `<div class="controls"><div id="mixer" class="mixer"></div></div><div class="controls mix-preview">${basketPreview()}</div>`,
+    `<div class="controls"><div id="mixer" class="mixer"></div></div><div class="controls mix-preview"><canvas id="mix-score" class="mix-score" width="600" height="140" aria-hidden="true"></canvas>${basketPreview()}</div>`,
     `<div class="pond reply">${state.heard?'「我把你篮子里的整段声音倒过来放。」':'「可以让我听听你的篮子吗？」'}</div><div class="controls"><button class="secondary" id="listen">▷ 听原来的整段</button> <button class="secondary" id="reply">▷ 听小伙伴的回响</button><p></p><label for="echo">把整段倒放也放进篮子 <input id="echo" type="checkbox" ${state.echo?'checked':''}></label></div>`,
     `<div class="postcard"><span id="cardName"></span></div><div class="controls"><label for="name">明信片名字</label><input id="name" type="text" maxlength="40" placeholder="一篮河岸的声音"><p></p><button class="secondary" id="listen">▷ 听明信片</button> <button class="secondary" id="download">下载声音与图片</button></div>`
   ];
@@ -338,17 +338,22 @@ function bindStone(){
 }
 function bindRiver(){
   const canvas=$('river'), ctx=canvas.getContext('2d'), w=canvas.width,h=canvas.height;
-  const colors=['#316b5e','#a55d4c','#446685','#805777','#716026'];
+  const colors=['#f7fff5','#d6fcf6','#ffffc8','#d4e7ff','#ffe7dd'];
   let line=null, keyboardLine=null, selected=0;
   $('lanes').innerHTML=syllables.map((name,i)=>`<button data-pitch="${i}" style="top:${laneY(i)*100}%">${i+1} ${name}</button>`).join('');
   $('lanes').onclick=e=>{const button=e.target.closest('button');if(button){selected=+button.dataset.pitch;draw();play('piano',selected);}};
   function draw(){
     ctx.clearRect(0,0,w,h);
     for(let i=0;i<7;i++){
-      ctx.beginPath();ctx.strokeStyle=i===selected?'#6e9c89':'#f8faf2';ctx.lineWidth=2;
+      ctx.beginPath();ctx.strokeStyle=i===selected?'#e8ffffba':'#e8ffff50';ctx.lineWidth=i===selected?2:1;
       ctx.moveTo(0,laneY(i)*h);ctx.lineTo(w,laneY(i)*h);ctx.stroke();
     }
-    ctx.lineWidth=6;ctx.lineCap='round';ctx.lineJoin='round';
+    ctx.strokeStyle='#d5f7f348';ctx.lineWidth=1;
+    for(let i=0;i<=riverBeats;i++){
+      const x=i*w/riverBeats;
+      ctx.beginPath();ctx.moveTo(x,h-12);ctx.lineTo(x,h-4);ctx.stroke();
+    }
+    ctx.lineWidth=3.5;ctx.lineCap='round';ctx.lineJoin='round';
     state.lines.forEach((points,index)=>{
       ctx.strokeStyle=colors[index%colors.length];ctx.beginPath();
       points.forEach(([x,y],i)=>i?ctx.lineTo(x*w,y*h):ctx.moveTo(x*w,y*h));
@@ -401,9 +406,32 @@ function bindMixer(){
   for(const {key} of effects){
     const input=$('mix-'+key), output=$('amount-'+key);
     const update=()=>{output.textContent=input.value==='0'?'关闭':input.value+'%';};
-    input.oninput=()=>{state.mix[key]=+input.value;update();save();};
+    input.oninput=()=>{state.mix[key]=+input.value;update();drawMixScore();save();};
     update();
   }
+  drawMixScore();
+}
+function drawMixScore(){
+  const canvas=$('mix-score'), ctx=canvas.getContext('2d');
+  const {width,height}=canvas;
+  ctx.clearRect(0,0,width,height);
+  const curve=(x,layer)=>height*(.27+layer*.145)+Math.sin(x/width*Math.PI*(2+layer*.43)+layer*1.34)*(5+state.mix[effects[layer].key]*.24);
+  ctx.lineWidth=1;
+  effects.forEach(({key},layer)=>{
+    ctx.strokeStyle=state.mix[key]?'#d2fff4a0':'#d2fff44d';
+    ctx.beginPath();
+    for(let x=8;x<width-8;x+=3){
+      const y=curve(x,layer);
+      if(x===8)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+  });
+  ctx.strokeStyle='#c7f8ec57';
+  ctx.beginPath();
+  for(let x=9;x<width-8;x+=5){
+    ctx.moveTo(x,curve(x,0));ctx.lineTo(x,curve(x,3));
+  }
+  ctx.stroke();
 }
 function saveCard(){
   const name=state.name.trim()||'一篮河岸的声音';
