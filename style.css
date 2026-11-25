@@ -7,10 +7,10 @@
 .stone-row .packed:after{top:1px;right:1px}
 .basket-preview{display:grid;grid-template-columns:minmax(96px,140px) 1fr;align-items:center;gap:13px;border-top:1px solid #dedaca;padding-top:12px}
 .basket-preview p{font-size:12px;margin:1px 0 7px}
-.mini-basket{position:relative;isolation:isolate;display:grid;place-items:center;min-width:0;height:84px;border:5px solid #c69962;border-radius:50%;background:repeating-linear-gradient(7deg,#eed2a2 0 2px,transparent 2px 7px),repeating-linear-gradient(99deg,#b18349 0 4px,#d1ae74 4px 8px);box-shadow:0 0 0 2px #fcf2db,0 6px 9px #75583446,inset 0 2px 13px #77532c80}
-.basket-pebbles{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:3px 6px;width:76%;max-width:75px;min-height:24px}
-.basket-pebble{width:24px}
-.mini-basket:after{content:"";pointer-events:none;position:absolute;inset:0;border-radius:50%;border-bottom:6px solid #c69a60;box-shadow:0 2px 0 #f1d5a2}
+.mini-basket{position:relative;min-width:0;width:100%;aspect-ratio:289/155;background:url(basket-print.webp) center/contain no-repeat}
+.basket-pebbles{position:absolute;top:26%;left:14%;right:14%;transform:translateY(-50%);display:flex;align-items:center;justify-content:center;gap:4%}
+.basket-pebble{width:18%;flex:none}
+
 .river-drawing{position:relative;min-width:0;overflow:hidden;border-radius:0 12px 12px 0}
 .playhead{position:absolute;top:0;bottom:0;left:0;width:2px;background:#a84936;box-shadow:0 0 0 1px #fff5e6a0;pointer-events:none;z-index:1}
 .playhead::before{content:"";position:absolute;top:0;left:-4px;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid #a84936}
